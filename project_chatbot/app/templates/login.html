@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="card auth">
+  <header class="card-header">
+    <h1>Anmelden</h1>
+    <p class="muted small">Melde dich an, um den Chat zu benutzen</p>
+  </header>
+
+  <form method="post" class="auth-form">
+    <label for="username">Benutzername</label>
+    <input id="username" name="username" type="text" value="{{ username or '' }}" required>
+
+    <label for="password">Passwort</label>
+    <input id="password" name="password" type="password" required>
+
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Anmelden</button>
+      <a class="btn" href="{{ url_for('register') }}">Registrieren</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

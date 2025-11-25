@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title or "YourChatbot" }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{{ url_for('static', filename='logo.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dark">
+  <div class="bg"></div>
+
+  <header class="site-header">
+    <div class="brand">
+      <img class="logo" src="{{ url_for('static', filename='logo.svg') }}" alt="Logo">
+      <span class="brand-name">YourChatbot</span>
+    </div>
+    <nav class="nav">
+      {% if username %}
+      <a href="{{ url_for('profile') }}" title="Profil">{{ username }}</a>
+      <a href="{{ url_for('logout') }}" title="Ausloggen">Abmelden</a>
+      {% else %}
+      <a href="{{ url_for('login') }}" title="Anmelden">Anmelden</a>
+      {% endif %}
+      <button id="themeToggle" aria-label="Theme umschalten">🌓</button>
+    </nav>
+  </header>
+
+  <main class="shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+      {% for category, msg in messages %}
+      <div class="flash {{ category }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer"><small>© 2025 E3FIAE Team 2</small></footer>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

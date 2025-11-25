@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <section class="card auth">
+    <header class="card-header">
+      <h1>{{ title }}</h1>
+      <p class="muted small">Erstelle oder bearbeite deinen Chatbot</p>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+      {% for category, msg in messages %}
+      <div class="flash {{ category }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <form method="post" class="auth-form">
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" value="{{ chatbot.name if chatbot else '' }}">
+
+      <label for="systemprompt">System Prompt</label>
+      <textarea id="systemprompt" name="systemprompt" rows="6">{{ chatbot.systemprompt if chatbot else '' }}</textarea>
+
+      <label for="welcomemessage">Willkommens-Nachricht</label>
+      <textarea id="welcomemessage" name="welcomemessage" rows="3">{{ chatbot.welcomemessage if chatbot else '' }}</textarea>
+
+      <div class="form-actions">
+        <button class="btn primary" type="submit">Speichern</button>
+        <a class="btn" href="{{ url_for('profile') }}">Abbrechen</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

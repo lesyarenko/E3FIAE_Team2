@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="card profile">
+  <header class="card-header">
+    <h1>Profil</h1>
+    <p class="muted small">Verwalte deine Chatbots — <a class="btn" href="{{ url_for('chatbot_new') }}">Neu</a></p>
+  </header>
+
+  {% if chatbots %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>System Prompt</th>
+          <th>Willkommens-Nachricht</th>
+          <th>Erstellt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in chatbots %}
+        <tr>
+          <td>{{ c.id }}</td>
+          <td>
+            {{ c.name or '-' }}
+            <a href="{{ url_for('chatbot_edit', chatbot_id=c.id) }}">(Bearbeiten)</a>
+            <form method="post" action="{{ url_for('chatbot_delete', chatbot_id=c.id) }}" style="display:inline" onsubmit="return confirm('Chatbot wirklich löschen?');">
+              <button class="btn" type="submit">(Löschen)</button>
+            </form>
+          </td>
+          <td class="mono small">{{ (c.systemprompt[:120] ~ '...') if c.systemprompt and c.systemprompt|length > 120
+            else (c.systemprompt or '-') }}</td>
+          <td>{{ c.welcomemessage or '-' }}</td>
+          <td>{{ c.created.strftime('%Y-%m-%d %H:%M') if c.created else '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="muted">Du hast noch keine Chatbots angelegt.</p>
+  {% endif %}
+</section>
+{% endblock %}
