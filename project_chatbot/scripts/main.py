@@ -73,9 +73,14 @@ def chatbot_new():
     welcomemessage = request.form.get('welcomemessage') or ''
 
     chatbot = ChatBot(user_id=user.id, name=name, systemprompt=systemprompt, welcomemessage=welcomemessage)
-    db.session.add(chatbot)
-    db.session.commit()
-    flash('Chatbot erstellt.', 'success')
+    try:
+        db.session.add(chatbot)
+        db.session.commit()
+        flash('Chatbot erstellt.', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('Fehler beim Erstellen des Chatbots.', 'error')
+
     return redirect(url_for('profile'))
 
 
@@ -98,8 +103,13 @@ def chatbot_edit(chatbot_id):
     chatbot.name = (request.form.get('name') or '').strip()
     chatbot.systemprompt = request.form.get('systemprompt') or ''
     chatbot.welcomemessage = request.form.get('welcomemessage') or ''
-    db.session.commit()
-    flash('Änderungen gespeichert.', 'success')
+    try:
+        db.session.commit()
+        flash('Änderungen gespeichert.', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('Fehler beim Speichern der Änderungen.', 'error')
+
     return redirect(url_for('profile'))
 
 
@@ -110,14 +120,14 @@ def chatbot_delete(chatbot_id):
     if not user:
         return redirect(url_for('login'))
 
-    cb = ChatBot.query.get(chatbot_id)
+    chatbot = ChatBot.query.get(chatbot_id)
     # Basic validation
-    if not cb or cb.user_id != user.id:
+    if not chatbot or chatbot.user_id != user.id:
         flash('Chatbot nicht gefunden oder keine Berechtigung.', 'error')
         return redirect(url_for('profile'))
 
     try:
-        db.session.delete(cb)
+        db.session.delete(chatbot)
         db.session.commit()
         flash('Chatbot gelöscht.', 'success')
     except Exception:
@@ -142,8 +152,8 @@ def register():
         return render_template('register.html', title='Registrieren', username=username)
 
     # Check for existing user
-    existing = User.query.filter_by(username=username).first()
-    if existing:
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
         flash('Benutzername existiert bereits. Bitte wähle einen anderen.', 'error')
         return render_template('register.html', title='Registrieren', username='')
 
@@ -152,8 +162,13 @@ def register():
 
     # Create and save the user
     new_user = User(username=username, password=password_hash, salt=salt)
-    db.session.add(new_user)
-    db.session.commit()
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        flash('Fehler bei der Registrierung. Bitte versuche es erneut.', 'error')
+        return render_template('register.html', title='Registrieren', username=username)
 
     # log the user in immediately after registering
     session['user_id'] = new_user.id
