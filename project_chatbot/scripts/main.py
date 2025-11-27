@@ -41,21 +41,56 @@ def home():
     if not user:
         return redirect(url_for('login'))
     return render_template('index.html', title='YourChatbot', username=user.username)
+######
 
+@app.route('/catalog')
+def catalog():
+    # require authentication
+    user = g.get('user')
+    if not user:
+        return redirect(url_for('login'))
 
+    try:
+        if user.username == 'admin':
+            # Admin sieht ALLE Chatbots
+            chatbots = ChatBot.query.order_by(ChatBot.created.desc()).all()
+            is_admin = True
+        else:
+            # Normale User sehen NUR ihre eigenen
+            chatbots = user.chatbots
+            is_admin = False
+    except Exception:
+        chatbots = []
+        is_admin = False
+
+    return render_template(
+        'catalog.html',
+        title='Katalog',
+        username=user.username,
+        chatbots=chatbots,
+        is_admin=is_admin
+    )
+# eigene Profile-Seite
 @app.route('/profile')
 def profile():
     # require authentication
     user = g.get('user')
     if not user:
         return redirect(url_for('login'))
-    # get chatbots for this user
-    try:
-        chatbots = user.chatbots if hasattr(user, 'chatbots') else ChatBot.query.filter_by(user_id=user.id).all()
-    except Exception:
-        chatbots = []
-    return render_template('profile.html', title='Profil', username=user.username, chatbots=chatbots)
 
+    # Anzahl der eigenen Chatbots
+    try:
+        bot_count = len(user.chatbots)
+    except Exception:
+        bot_count = 0
+
+    return render_template(
+        'profile_user.html',    # neues Template, musst du noch anlegen
+        title='Profil',
+        username=user.username,
+        user=user,
+        bot_count=bot_count
+    )
 
 @app.route('/chatbot/new', methods=['GET', 'POST'])
 def chatbot_new():
@@ -81,7 +116,7 @@ def chatbot_new():
         db.session.rollback()
         flash('Fehler beim Erstellen des Chatbots.', 'error')
 
-    return redirect(url_for('profile'))
+    return redirect(url_for('catalog'))
 
 
 @app.route('/chatbot/<string:chatbot_id>/edit', methods=['GET', 'POST'])
@@ -94,7 +129,7 @@ def chatbot_edit(chatbot_id):
     chatbot = ChatBot.query.get(chatbot_id)
     if not chatbot or chatbot.user_id != user.id:
         flash('Chatbot nicht gefunden oder keine Berechtigung.', 'error')
-        return redirect(url_for('profile'))
+        return redirect(url_for('catalog'))
 
     if request.method == 'GET':
         return render_template('chatbot_form.html', title='Chatbot bearbeiten', username=user.username, chatbot=chatbot)
@@ -110,7 +145,7 @@ def chatbot_edit(chatbot_id):
         db.session.rollback()
         flash('Fehler beim Speichern der Änderungen.', 'error')
 
-    return redirect(url_for('profile'))
+    return redirect(url_for('catalog'))
 
 
 @app.route('/chatbot/<string:chatbot_id>/delete', methods=['POST'])
@@ -124,7 +159,7 @@ def chatbot_delete(chatbot_id):
     # Basic validation
     if not chatbot or chatbot.user_id != user.id:
         flash('Chatbot nicht gefunden oder keine Berechtigung.', 'error')
-        return redirect(url_for('profile'))
+        return redirect(url_for('catalog'))
 
     try:
         db.session.delete(chatbot)
@@ -134,7 +169,7 @@ def chatbot_delete(chatbot_id):
         db.session.rollback()
         flash('Fehler beim Löschen des Chatbots.', 'error')
 
-    return redirect(url_for('profile'))
+    return redirect(url_for('catalog'))
 
 
 @app.route('/register', methods=['GET', 'POST'])

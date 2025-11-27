@@ -13,6 +13,9 @@
       <thead>
         <tr>
           <th>ID</th>
+           {% if is_admin %}
+            <th>Ersteller</th>
+           {% endif %}
           <th>Name</th>
           <th>System Prompt</th>
           <th>Willkommens-Nachricht</th>
@@ -23,6 +26,9 @@
         {% for c in chatbots %}
         <tr>
           <td>{{ c.id }}</td>
+          {% if is_admin %}
+            <td>{{ c.user.username if c.user else '-' }}</td>
+          {% endif %}
           <td>
             {{ c.name or '-' }}
             <a href="{{ url_for('chatbot_edit', chatbot_id=c.id) }}">(Bearbeiten)</a>
