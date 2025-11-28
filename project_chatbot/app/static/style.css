@@ -31,6 +31,7 @@ input{border:1px solid var(--stroke);border-radius:12px;padding:12px 14px;backgr
 .shell{max-width:1000px;margin:32px auto;padding:0 16px}
 .card{background:var(--card);border:1px solid var(--stroke);border-radius:18px;padding:18px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
 .table-wrap{margin-top:16px;overflow-x:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px 16px;text-align:left}.table thead th{font-weight:600;border-bottom:1px solid var(--stroke)}.table tbody tr:nth-child(even){background-color:rgba(255,255,255,.02)}
+.actions{display:flex;gap:10px;align-items:center}.actions form{margin:0}.action-link{font-size:.9rem;color:var(--primary);text-decoration:none}.action-link:hover{text-decoration:underline}.btn.small{padding:6px 12px;font-size:.8rem}.btn.danger{background:#ff4b6a;color:#fff}.btn.danger:hover{background:#e23b59}
 
 .btn{border:0;border-radius:12px;padding:10px 16px;cursor:pointer}
 .btn.primary{background:var(--primary);color:#fff}.btn.primary:hover{background:var(--primary-strong)}
