@@ -24,9 +24,15 @@ input{border:1px solid var(--stroke);border-radius:12px;padding:12px 14px;backgr
 .site-header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--stroke);backdrop-filter:blur(6px)}
 .brand{display:flex;align-items:center;gap:10px}.logo{width:28px;height:28px}
 .brand-name{font-weight:700}
+
 .nav{display:flex;gap:12px;align-items:center}
+.nav-links{display:flex;align-items:center;gap:20px}.nav a,.nav a:link,.nav a:visited{color:var(--text);text-decoration:none;font-weight:500}.nav a:hover{color:var(--primary)}#themeToggle{margin-left:10px}
+
 .shell{max-width:1000px;margin:32px auto;padding:0 16px}
 .card{background:var(--card);border:1px solid var(--stroke);border-radius:18px;padding:18px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+.table-wrap{margin-top:16px;overflow-x:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px 16px;text-align:left}.table thead th{font-weight:600;border-bottom:1px solid var(--stroke)}.table tbody tr:nth-child(even){background-color:rgba(255,255,255,.02)}
+.actions{display:flex;gap:10px;align-items:center}.actions form{margin:0}.action-link{font-size:.9rem;color:var(--primary);text-decoration:none}.action-link:hover{text-decoration:underline}.btn.small{padding:6px 12px;font-size:.8rem}.btn.danger{background:#ff4b6a;color:#fff}.btn.danger:hover{background:#e23b59}
+
 .btn{border:0;border-radius:12px;padding:10px 16px;cursor:pointer}
 .btn.primary{background:var(--primary);color:#fff}.btn.primary:hover{background:var(--primary-strong)}
 .muted{color:var(--muted)}.small{font-size:.9rem}
@@ -59,6 +65,8 @@ body.light .bubble-body{background:#fff}
 .chat-form{display:grid;grid-template-columns:1fr auto;gap:10px}
 .chat-form input:disabled{opacity:.6}
 .chat-form button{min-width:120px}
+.auth-form{display:flex;flex-direction:column;gap:12px;max-width:420px}.auth-form label{font-weight:500}.auth-form input{width:100%}
+
 
 /* TYPING INDICATOR */
 .typing{display:flex;gap:6px;align-items:center;height:24px;margin-top:4px}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card profile">
+    <header class="card-header">
+        <h1>Profil</h1>
+        <p class="muted small">Deine Benutzerinformationen</p>
+    </header>
+
+    <p><strong>Benutzername:</strong> {{ user.username }}</p>
+    <p><strong>Registriert seit:</strong> {{ user.created.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Anzahl Chatbots:</strong> {{ bot_count }}</p>
+</section>
+{% endblock %}
