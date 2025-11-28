@@ -14,6 +14,7 @@
 │     ├─ index.html         # Template für Chat. Variablen: -
 │     ├─ login.html         # Template für Login mit Benutzername und Passwort. Variablen: username
 │     ├─ profile.html       # Template für Benutzerprofil mit Liste der vom Benutzer erstellten Chatbots. Variablen: chatbots
+│     ├─ catalog.html       # Katalog für Chatbots
 │     └─ register.html      # Template für Registrierung mit Erstellung Benutzername und Passwort. Variablen: username
 ├─ venv/                    # Virtuelle Umgebung (nicht in GitHub hochladen!)
 ├─ scripts/
