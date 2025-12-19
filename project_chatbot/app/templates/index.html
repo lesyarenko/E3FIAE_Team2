@@ -8,6 +8,9 @@
       <div>
         <h1 class="chat-title">{{ title }}</h1>
         <p class="muted small">Schnell. Klar. Hilfsbereit.</p>
+        {% if version %}
+        <p class="muted small">Version: {{ version }}</p>
+        {% endif %}
       </div>
     </div>
   </header>
