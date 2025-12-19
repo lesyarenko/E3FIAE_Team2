@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 import os
+import subprocess
 from db import init_db, db, User, ChatBot
 from utils import hash_password, verify_password
 
@@ -22,6 +23,21 @@ app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 init_db(app, create_tables=True)
 
 
+def get_git_info():
+    try:
+        commit_id = subprocess.check_output(
+            ['git', 'rev-parse', 'HEAD']
+        ).strip().decode('utf-8')
+        git_tag = subprocess.check_output(
+            ['git', 'describe', '--tags']
+        ).strip().decode('utf-8')
+        git_tag = git_tag.split('-')[0]   # nur der erste Teil = Sprint_2
+        return commit_id, git_tag
+    except subprocess.CalledProcessError:
+        # Falls keine Tags existieren oder Git nicht verfügbar ist
+        return None, None
+
+
 @app.before_request
 def load_logged_in_user():
     """Load user object into `g.user` if logged in via session."""
@@ -40,7 +56,19 @@ def home():
     user = g.get('user')
     if not user:
         return redirect(url_for('login'))
-    return render_template('index.html', title='YourChatbot', username=user.username)
+
+    # Git-Infos holen
+    commit_id, git_tag = get_git_info()
+    version = git_tag or (commit_id[:7] if commit_id else 'dev')
+
+    return render_template(
+        'index.html',
+        title='YourChatbot',
+        username=user.username,
+        version=version,
+        git_tag=git_tag,
+        git_commit=commit_id,
+    )
 ######
 
 @app.route('/catalog')
