@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 import os
 import subprocess
-from db import init_db, db, User, ChatBot
+from db import init_db, db, User, ChatBot, ChatBotTextFile, ChatBotCssFile
 from utils import hash_password, verify_password
 
 app = Flask(
@@ -138,11 +138,36 @@ def chatbot_new():
     chatbot = ChatBot(user_id=user.id, name=name, systemprompt=systemprompt, welcomemessage=welcomemessage)
     try:
         db.session.add(chatbot)
+        db.session.flush()  # flush to get the chatbot ID
+        
+        # Handle text file uploads
+        text_files = request.files.getlist('text_files')
+        for text_file in text_files:
+            if text_file and text_file.filename:
+                content = text_file.read().decode('utf-8', errors='replace')
+                text_file_obj = ChatBotTextFile(
+                    chatbot_id=chatbot.id,
+                    filename=text_file.filename,
+                    content=content
+                )
+                db.session.add(text_file_obj)
+        
+        # Handle CSS file upload
+        css_file = request.files.get('css_file')
+        if css_file and css_file.filename:
+            content = css_file.read().decode('utf-8', errors='replace')
+            css_file_obj = ChatBotCssFile(
+                chatbot_id=chatbot.id,
+                filename=css_file.filename,
+                content=content
+            )
+            db.session.add(css_file_obj)
+        
         db.session.commit()
         flash('Chatbot erstellt.', 'success')
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        flash('Fehler beim Erstellen des Chatbots.', 'error')
+        flash(f'Fehler beim Erstellen des Chatbots: {str(e)}', 'error')
 
     return redirect(url_for('catalog'))
 
@@ -166,14 +191,71 @@ def chatbot_edit(chatbot_id):
     chatbot.name = (request.form.get('name') or '').strip()
     chatbot.systemprompt = request.form.get('systemprompt') or ''
     chatbot.welcomemessage = request.form.get('welcomemessage') or ''
+    
     try:
+        # Handle text file uploads
+        text_files = request.files.getlist('text_files')
+        for text_file in text_files:
+            if text_file and text_file.filename:
+                content = text_file.read().decode('utf-8', errors='replace')
+                text_file_obj = ChatBotTextFile(
+                    chatbot_id=chatbot.id,
+                    filename=text_file.filename,
+                    content=content
+                )
+                db.session.add(text_file_obj)
+        
+        # Handle CSS file upload (replace existing if present)
+        css_file = request.files.get('css_file')
+        if css_file and css_file.filename:
+            content = css_file.read().decode('utf-8', errors='replace')
+            # Delete existing CSS file if present
+            if chatbot.css_file:
+                db.session.delete(chatbot.css_file)
+                db.session.flush()  # flush to delete old css file
+            # Create new CSS file
+            css_file_obj = ChatBotCssFile(
+                chatbot_id=chatbot.id,
+                filename=css_file.filename,
+                content=content
+            )
+            db.session.add(css_file_obj)
+        
         db.session.commit()
         flash('Änderungen gespeichert.', 'success')
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        flash('Fehler beim Speichern der Änderungen.', 'error')
+        flash(f'Fehler beim Speichern der Änderungen: {str(e)}', 'error')
 
     return redirect(url_for('catalog'))
+
+
+@app.route('/chatbot/<string:chatbot_id>/textfile/<string:textfile_id>/delete', methods=['POST'])
+def textfile_delete(chatbot_id, textfile_id):
+    # require authentication
+    user = g.get('user')
+    if not user:
+        return redirect(url_for('login'))
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot or chatbot.user_id != user.id:
+        flash('Chatbot nicht gefunden oder keine Berechtigung.', 'error')
+        return redirect(url_for('catalog'))
+
+    text_file = ChatBotTextFile.query.get(textfile_id)
+    if not text_file or text_file.chatbot_id != chatbot_id:
+        flash('Text Datei nicht gefunden oder keine Berechtigung.', 'error')
+        return redirect(url_for('chatbot_edit', chatbot_id=chatbot_id))
+
+    try:
+        db.session.delete(text_file)
+        db.session.commit()
+        flash('Text Datei gelöscht.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Löschen der Datei: {str(e)}', 'error')
+
+    return redirect(url_for('chatbot_edit', chatbot_id=chatbot_id))
 
 
 @app.route('/chatbot/<string:chatbot_id>/delete', methods=['POST'])
@@ -193,9 +275,9 @@ def chatbot_delete(chatbot_id):
         db.session.delete(chatbot)
         db.session.commit()
         flash('Chatbot gelöscht.', 'success')
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        flash('Fehler beim Löschen des Chatbots.', 'error')
+        flash(f'Fehler beim Löschen des Chatbots: {str(e)}', 'error')
 
     return redirect(url_for('catalog'))
 
@@ -228,9 +310,9 @@ def register():
     try:
         db.session.add(new_user)
         db.session.commit()
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        flash('Fehler bei der Registrierung. Bitte versuche es erneut.', 'error')
+        flash(f'Fehler bei der Registrierung: {str(e)}', 'error')
         return render_template('register.html', title='Registrieren', username=username)
 
     # log the user in immediately after registering

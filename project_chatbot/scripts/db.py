@@ -53,8 +53,40 @@ class ChatBot(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
     user = db.relationship('User', back_populates='chatbots')
+    text_files = db.relationship('ChatBotTextFile', back_populates='chatbot', cascade='all, delete-orphan')
+    css_file = db.relationship('ChatBotCssFile', back_populates='chatbot', cascade='all, delete-orphan', uselist=False)
 
     def __repr__(self):
         return f"<ChatBot id={self.id} name={self.name} username={self.username}>"
+
+
+class ChatBotTextFile(db.Model):
+    __tablename__ = 'chatbot_textfiles'
+
+    id = db.Column(db.String(8), primary_key=True, default=generate_id8, unique=True)
+    chatbot_id = db.Column(db.String(8), db.ForeignKey('chatbots.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
+
+    chatbot = db.relationship('ChatBot', back_populates='text_files')
+
+    def __repr__(self):
+        return f"<ChatBotTextFile id={self.id} chatbot_id={self.chatbot_id} filename={self.filename}>"
+
+
+class ChatBotCssFile(db.Model):
+    __tablename__ = 'chatbot_cssfiles'
+
+    id = db.Column(db.String(8), primary_key=True, default=generate_id8, unique=True)
+    chatbot_id = db.Column(db.String(8), db.ForeignKey('chatbots.id'), nullable=False, unique=True)
+    filename = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
+
+    chatbot = db.relationship('ChatBot', back_populates='css_file')
+
+    def __repr__(self):
+        return f"<ChatBotCssFile id={self.id} chatbot_id={self.chatbot_id} filename={self.filename}>"
 
 

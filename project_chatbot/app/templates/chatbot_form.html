@@ -7,7 +7,7 @@
       <p class="muted small">Erstelle oder bearbeite deinen Chatbot</p>
     </header>
 
-    <form method="post" class="auth-form">
+    <form method="post" class="auth-form" enctype="multipart/form-data">
       <label for="name">Name</label>
       <input id="name" name="name" type="text" value="{{ chatbot.name if chatbot else '' }}">
 
@@ -17,10 +17,34 @@
       <label for="welcomemessage">Willkommens-Nachricht</label>
       <textarea id="welcomemessage" name="welcomemessage" rows="3">{{ chatbot.welcomemessage if chatbot else '' }}</textarea>
 
+      <label for="text_files">Text-Dateien hochladen</label>
+      <input id="text_files" name="text_files" type="file" multiple accept=".txt,.md,.pdf">
+      <p class="small muted">Mehrere Dateien sind erlaubt</p>
+
+      <label for="css_file">CSS-Datei hochladen</label>
+      <input id="css_file" name="css_file" type="file" accept=".css">
+      <p class="small muted">Nur eine CSS-Datei ist erlaubt</p>
+
       <div class="form-actions">
         <button class="btn primary" type="submit">Speichern</button>
         <a class="btn" href="{{ url_for('profile') }}">Abbrechen</a>
       </div>
     </form>
+
+    {% if chatbot and chatbot.text_files %}
+    <div class="text-files-section">
+      <h3>Hochgeladene Text-Dateien</h3>
+      <ul class="file-list">
+        {% for text_file in chatbot.text_files %}
+        <li class="file-item">
+          <span class="file-name">{{ text_file.filename }}</span>
+          <form method="post" action="{{ url_for('textfile_delete', chatbot_id=chatbot.id, textfile_id=text_file.id) }}" class="delete-form" style="display: inline;">
+            <button type="submit" class="btn small danger" onclick="return confirm('Möchtest du diese Datei wirklich löschen?')">Löschen</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </section>
 {% endblock %}
