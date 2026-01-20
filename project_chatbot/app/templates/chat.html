@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{# Bot-spezifisches CSS (aus DB) direkt einfügen #}
+{% if chatbot.css_file and chatbot.css_file.content %}
+  <style>
+    {{ chatbot.css_file.content | safe }}
+  </style>
+{% endif %}
+
+<section class="card chat">
+  <header class="chat-topbar">
+    <div class="chat-ident">
+      <img class="avatar" src="{{ url_for('static', filename='logo.svg') }}" alt="Bot">
+      <div>
+        <h1 class="chat-title">{{ chatbot.name or 'Chat' }}</h1>
+        <p class="muted small">ID: {{ chatbot.id }}</p>
+      </div>
+    </div>
+  </header>
+
+  <div id="chat-window" class="chat-window">
+    <div class="bubble bot with-avatar">
+      <img class="bubble-avatar" src="{{ url_for('static', filename='logo.svg') }}" alt="Bot">
+      <div class="bubble-body">
+        <p class="muted small">Begrüßungsnachricht:</p>
+        <div class="bubble-text">{{ chatbot.welcomemessage or "Hallo! Ich bin dein Chatbot. Wie kann ich helfen?" }}</div>
+        <div class="meta">jetzt</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="typing" class="typing hidden">
+    <span></span><span></span><span></span>
+  </div>
+
+  <form id="chat-form" class="chat-form" autocomplete="off">
+    <input id="user-input" type="text" placeholder="Nachricht eingeben …">
+    <button class="btn primary" type="submit">Senden</button>
+  </form>
+</section>
+{% endblock %}

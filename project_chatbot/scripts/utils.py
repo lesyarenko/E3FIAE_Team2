@@ -1,6 +1,7 @@
 import secrets
 import hashlib
 import uuid
+import subprocess
 
 def hash_password(password: str, salt: str | None = None) -> tuple[str, str]:
     if salt is None:
@@ -17,3 +18,17 @@ def generate_id6():
 
 def generate_id8():
     return str(uuid.uuid4())[:8]
+
+def get_git_info():
+    try:
+        commit_id = subprocess.check_output(
+            ['git', 'rev-parse', 'HEAD']
+        ).strip().decode('utf-8')
+        git_tag = subprocess.check_output(
+            ['git', 'describe', '--tags']
+        ).strip().decode('utf-8')
+        git_tag = git_tag.split('-')[0]   # nur der erste Teil = Sprint_2
+        return commit_id, git_tag
+    except subprocess.CalledProcessError:
+        # Falls keine Tags existieren oder Git nicht verfügbar ist
+        return None, None

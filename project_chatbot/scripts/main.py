@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 import os
-import subprocess
 from db import init_db, db, User, ChatBot, ChatBotTextFile, ChatBotCssFile
-from utils import hash_password, verify_password
+from utils import hash_password, verify_password, get_git_info
 
 app = Flask(
     __name__,
@@ -23,20 +22,15 @@ app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 init_db(app, create_tables=True)
 
 
-def get_git_info():
-    try:
-        commit_id = subprocess.check_output(
-            ['git', 'rev-parse', 'HEAD']
-        ).strip().decode('utf-8')
-        git_tag = subprocess.check_output(
-            ['git', 'describe', '--tags']
-        ).strip().decode('utf-8')
-        git_tag = git_tag.split('-')[0]   # nur der erste Teil = Sprint_2
-        return commit_id, git_tag
-    except subprocess.CalledProcessError:
-        # Falls keine Tags existieren oder Git nicht verfügbar ist
-        return None, None
-
+@app.context_processor
+def inject_git_info():
+    """Inject git info into all templates."""
+    commit_id, git_tag = get_git_info()
+    return {
+        'version': git_tag or (commit_id[:7] if commit_id else 'dev'),
+        'git_tag': git_tag,
+        'git_commit': commit_id,
+    }
 
 @app.before_request
 def load_logged_in_user():
@@ -57,19 +51,38 @@ def home():
     if not user:
         return redirect(url_for('login'))
 
-    # Git-Infos holen
-    commit_id, git_tag = get_git_info()
-    version = git_tag or (commit_id[:7] if commit_id else 'dev')
-
     return render_template(
         'index.html',
         title='YourChatbot',
         username=user.username,
-        version=version,
-        git_tag=git_tag,
-        git_commit=commit_id,
     )
-######
+
+
+@app.route('/cb/<string:chatbot_id>')
+def cb(chatbot_id):
+    """Zeigt die Chat-Seite für einen spezifischen Chatbot"""
+    # require authentication
+    user = g.get('user')
+    if not user:
+        return redirect(url_for('login'))
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot:
+        flash('Chatbot nicht gefunden.', 'error')
+        return redirect(url_for('catalog'))
+
+    # Berechtigung: Admin darf alle, sonst nur eigene
+    if user.username != 'admin' and chatbot.user_id != user.id:
+        flash('Keine Berechtigung für diesen Chatbot.', 'error')
+        return redirect(url_for('catalog'))
+
+    return render_template(
+        'chat.html',
+        title=chatbot.name or 'Chat',
+        username=user.username,
+        chatbot=chatbot
+    )
+
 
 @app.route('/catalog')
 def catalog():

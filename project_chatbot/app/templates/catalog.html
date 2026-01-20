@@ -40,6 +40,7 @@
           <td>{{ c.created.strftime('%Y-%m-%d %H:%M') if c.created else '-' }}</td>
           <td>
             <div class="actions">
+              <a href="{{ url_for('cb', chatbot_id=c.id) }}" class="action-link">Öffnen</a>
               <a href="{{ url_for('chatbot_edit', chatbot_id=c.id) }}" class="action-link">Bearbeiten</a>
               <form method="post"
                     action="{{ url_for('chatbot_delete', chatbot_id=c.id) }}"
