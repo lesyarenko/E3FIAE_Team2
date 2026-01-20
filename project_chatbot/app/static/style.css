@@ -24,6 +24,7 @@ input{border:1px solid var(--stroke);border-radius:12px;padding:12px 14px;backgr
 .site-header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--stroke);backdrop-filter:blur(6px)}
 .brand{display:flex;align-items:center;gap:10px}.logo{width:28px;height:28px}
 .brand-name{font-weight:700}
+.version-tag{font-size:.75rem;color:var(--muted);margin-top:2px}
 
 .nav{display:flex;gap:12px;align-items:center}
 .nav-links{display:flex;align-items:center;gap:20px}.nav a,.nav a:link,.nav a:visited{color:var(--text);text-decoration:none;font-weight:500}.nav a:hover{color:var(--primary)}#themeToggle{margin-left:10px}
