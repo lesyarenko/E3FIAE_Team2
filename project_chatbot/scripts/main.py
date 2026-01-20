@@ -71,6 +71,32 @@ def home():
     )
 
 
+@app.route('/cb/<string:chatbot_id>')
+def cb(chatbot_id):
+    """Zeigt die Chat-Seite für einen spezifischen Chatbot"""
+    # require authentication
+    user = g.get('user')
+    if not user:
+        return redirect(url_for('login'))
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot:
+        flash('Chatbot nicht gefunden.', 'error')
+        return redirect(url_for('catalog'))
+
+    # Berechtigung: Admin darf alle, sonst nur eigene
+    if user.username != 'admin' and chatbot.user_id != user.id:
+        flash('Keine Berechtigung für diesen Chatbot.', 'error')
+        return redirect(url_for('catalog'))
+
+    return render_template(
+        'chat.html',
+        title=chatbot.name or 'Chat',
+        username=user.username,
+        chatbot=chatbot
+    )
+
+
 @app.route('/catalog')
 def catalog():
     # require authentication
