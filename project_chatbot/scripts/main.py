@@ -69,7 +69,7 @@ def home():
         git_tag=git_tag,
         git_commit=commit_id,
     )
-######
+
 
 @app.route('/catalog')
 def catalog():
