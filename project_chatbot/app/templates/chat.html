@@ -18,6 +18,7 @@
         <p class="muted small">ID: {{ chatbot.id }}</p>
       </div>
     </div>
+
   </header>
 
   <div id="chat-window" class="chat-window">
@@ -56,9 +57,11 @@
     <span></span><span></span><span></span>
   </div>
 
-  <form id="chat-form" class="chat-form" method="POST" action="{{ url_for('cb_send', chatbot_id=chatbot.id) }}" autocomplete="off">
-    <input id="user-input" name="message" type="text" placeholder="Nachricht eingeben …" required>
-    <button class="btn primary" type="submit">Senden</button>
-  </form>
+  <form id="chat-form" class="chat-form" data-send-url="{{ url_for('cb_send_json', chatbot_id=chatbot.id) }}"      data-reset-url="{{ url_for('cb_reset', chatbot_id=chatbot.id) }}"      autocomplete="off">
+  <input id="user-input"     name="message"      type="text"        placeholder="Nachricht eingeben …"       required>
+  <button class="btn primary" type="submit">Senden</button>
+  <button id="reset-btn"        class="btn secondary"        type="button">  Reset</button>
+</form>
+
 </section>
 {% endblock %}

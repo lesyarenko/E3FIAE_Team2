@@ -10,53 +10,111 @@
   });
 })();
 
-// Simple chat simulation 
+// Chat (AJAX) - Aufgabe 2
 (function(){
-  const form=document.getElementById('chat-form');
-  const input=document.getElementById('user-input');
-  const win=document.getElementById('chat-window');
-  const typing=document.getElementById('typing');
-  if(!form||!win) return;
-  if (form.getAttribute('action')) return; // backend chat: don't block submit
-  form.addEventListener('submit', e=>{
-    e.preventDefault();
-    const text=(input.value||'').trim();
-    if(!text) return;
-    addBubble('user', text);
-    input.value='';
-    input.disabled=true;
-    typing.classList.remove('hidden');
-    setTimeout(()=>{
-      typing.classList.add('hidden');
-      addBubble('bot', 'Danke! (Demo-Antwort)');
-      input.disabled=false;
-      input.focus();
-    }, 700);
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('user-input');
+  const win = document.getElementById('chat-window');
+  const typing = document.getElementById('typing');
+  const resetBtn = document.getElementById('reset-btn');
+
+  if(!form || !win || !input) return;
+
+  const sendUrl = form.dataset.sendUrl;
+  const resetUrl = form.dataset.resetUrl;
+  //if (!sendUrl) return; // not chatbot page, so don't run ajax chat here
+
+
+  // Save initial HTML (welcome bubble) so reset can restore it
+  const initialHTML = win.innerHTML;
+
+  // 1) Auto focus
+  input.focus();
+
+  // 2) Enter sends (no newline)
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
   });
 
-  function addBubble(role, text){
-    const wrap=document.createElement('div');
-    wrap.className = role==='user' ? 'bubble user' : 'bubble bot with-avatar';
+  // 3) Send without page reload using fetch()
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-    if(role==='bot'){
-      const av=document.createElement('img');
-      av.className='bubble-avatar';
-      const headerLogo=document.querySelector('.logo');
-      av.src=headerLogo?headerLogo.src:'';
-      av.alt='Bot';
+    const text = (input.value || '').trim();
+    if(!text) return;
+
+    // show user message immediately
+    addBubble('user', text);
+
+    input.value = '';
+    input.disabled = true;
+    typing && typing.classList.remove('hidden');
+
+    try {
+      const res = await fetch(sendUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) {
+        addBubble('bot', 'Error: message could not be sent.');
+      } else {
+        addBubble('bot', data.bot.text);
+      }
+    } catch (err) {
+      addBubble('bot', 'Network error.');
+    } finally {
+      typing && typing.classList.add('hidden');
+      input.disabled = false;
+      input.focus();
+    }
+  });
+
+  // 4) Reset button clears session + UI
+  if (resetBtn) {
+    resetBtn.addEventListener('click', async () => {
+      try {
+        await fetch(resetUrl, { method: 'POST' });
+      } catch (e) {
+        // even if request fails, reset UI anyway
+      }
+      win.innerHTML = initialHTML;
+      input.value = '';
+      input.disabled = false;
+      input.focus();
+      win.scrollTop = win.scrollHeight;
+    });
+  }
+
+  function addBubble(role, text){
+    const wrap = document.createElement('div');
+    wrap.className = role === 'user' ? 'bubble user' : 'bubble bot with-avatar';
+
+    if(role === 'bot'){
+      const av = document.createElement('img');
+      av.className = 'bubble-avatar';
+      const headerLogo = document.querySelector('.logo');
+      av.src = headerLogo ? headerLogo.src : '';
+      av.alt = 'Bot';
       wrap.appendChild(av);
     }
 
-    const body=document.createElement('div');
-    body.className='bubble-body';
+    const body = document.createElement('div');
+    body.className = 'bubble-body';
 
-    const msg=document.createElement('div');
-    msg.className='bubble-text';
-    msg.textContent=text;
+    const msg = document.createElement('div');
+    msg.className = 'bubble-text';
+    msg.textContent = text;
 
-    const meta=document.createElement('div');
-    meta.className='meta';
-    meta.textContent=new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
     body.appendChild(msg);
     body.appendChild(meta);

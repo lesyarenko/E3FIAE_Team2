@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import os
 from db import init_db, db, User, ChatBot, ChatBotTextFile, ChatBotCssFile
 from utils import hash_password, verify_password, get_git_info
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify
+from flask import jsonify
 
 app = Flask(
     __name__,
@@ -98,37 +100,87 @@ def cb(chatbot_id):
         chatbot=chatbot,
         history=history
     )
-    
-    @app.route('/cb/<string:chatbot_id>/send', methods=['POST'])
-    def cb_send(chatbot_id):
-        user = g.get('user')
-        if not user:
-            return redirect(url_for('login'))
 
-        chatbot = ChatBot.query.get(chatbot_id)
-        if not chatbot:
-            flash('Chatbot nicht gefunden.', 'error')
-            return redirect(url_for('catalog'))
+@app.route('/cb/<string:chatbot_id>/send', methods=['POST'])
+def cb_send(chatbot_id):
+    user = g.get('user')
+    if not user:
+        return redirect(url_for('login'))
 
-        # Permission check
-        if user.username != 'admin' and chatbot.user_id != user.id:
-            flash('Keine Berechtigung für diesen Chatbot.', 'error')
-            return redirect(url_for('catalog'))
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot:
+        flash('Chatbot nicht gefunden.', 'error')
+        return redirect(url_for('catalog'))
 
-        # Read message from form
-        msg = (request.form.get('message') or '').strip()
-        if not msg:
-            return redirect(url_for('cb', chatbot_id=chatbot_id))
+       # Permission check
+    if user.username != 'admin' and chatbot.user_id != user.id:
+        flash('Keine Berechtigung für diesen Chatbot.', 'error')
+        return redirect(url_for('catalog'))
 
-        # 1) Save user message in session
-        append_chat(chatbot_id, "user", msg)
-
-        # 2) Simple bot answer (demo for Aufgabe 1)
-        bot_answer = f"Antwort: Ich habe verstanden: {msg}"
-        append_chat(chatbot_id, "bot", bot_answer)
-
-        # Go back to chat page (history is now longer)
+    # Read message from form
+    msg = (request.form.get('message') or '').strip()
+    if not msg:
         return redirect(url_for('cb', chatbot_id=chatbot_id))
+
+    # 1) Save user message in session
+    append_chat(chatbot_id, "user", msg)
+
+    # 2) Simple bot answer (demo for Aufgabe 1)
+    bot_answer = f"Antwort: Ich habe verstanden: {msg}"
+    append_chat(chatbot_id, "bot", bot_answer)
+
+    # Go back to chat page (history is now longer)
+    return redirect(url_for('cb', chatbot_id=chatbot_id))
+
+@app.route('/cb/<string:chatbot_id>/send_json', methods=['POST'])
+def cb_send_json(chatbot_id):
+    user = g.get('user')
+    if not user:
+        return jsonify({"ok": False, "error": "not_logged_in"}), 401
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+
+    if user.username != 'admin' and chatbot.user_id != user.id:
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    data = request.get_json(silent=True) or {}
+    msg = (data.get('message') or '').strip()
+    if not msg:
+        return jsonify({"ok": False, "error": "empty_message"}), 400
+
+    # save user message (session)
+    append_chat(chatbot_id, "user", msg)
+
+    # simple bot answer (demo)
+    bot_answer = f"Antwort: Ich habe verstanden: {msg}"
+    append_chat(chatbot_id, "bot", bot_answer)
+
+    return jsonify({
+        "ok": True,
+        "user": {"role": "user", "text": msg},
+        "bot": {"role": "bot", "text": bot_answer}
+    })
+
+@app.route('/cb/<string:chatbot_id>/reset', methods=['POST'])
+def cb_reset(chatbot_id):
+    user = g.get('user')
+    if not user:
+        return jsonify({"ok": False, "error": "not_logged_in"}), 401
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+
+    if user.username != 'admin' and chatbot.user_id != user.id:
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    # delete ONLY this chatbot session history
+    session.pop(_chat_key(chatbot_id), None)
+    session.modified = True
+
+    return jsonify({"ok": True})
 
 
 
