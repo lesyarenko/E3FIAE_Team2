@@ -29,14 +29,35 @@
         <div class="meta">jetzt</div>
       </div>
     </div>
+    {# Session chat history (only current session) #}
+    {% if history %}
+      {% for m in history %}
+        {% if m.role == 'user' %}
+          <div class="bubble user">
+            <div class="bubble-body">
+              <div class="bubble-text">{{ m.text }}</div>
+              <div class="meta">user</div>
+            </div>
+          </div>
+        {% else %}
+          <div class="bubble bot with-avatar">
+            <img class="bubble-avatar" src="{{ url_for('static', filename='logo.svg') }}" alt="Bot">
+            <div class="bubble-body">
+              <div class="bubble-text">{{ m.text }}</div>
+              <div class="meta">ki</div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
   </div>
 
   <div id="typing" class="typing hidden">
     <span></span><span></span><span></span>
   </div>
 
-  <form id="chat-form" class="chat-form" autocomplete="off">
-    <input id="user-input" type="text" placeholder="Nachricht eingeben …">
+  <form id="chat-form" class="chat-form" method="POST" action="{{ url_for('cb_send', chatbot_id=chatbot.id) }}" autocomplete="off">
+    <input id="user-input" name="message" type="text" placeholder="Nachricht eingeben …" required>
     <button class="btn primary" type="submit">Senden</button>
   </form>
 </section>

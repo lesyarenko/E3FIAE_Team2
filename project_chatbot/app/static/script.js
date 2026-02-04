@@ -17,7 +17,7 @@
   const win=document.getElementById('chat-window');
   const typing=document.getElementById('typing');
   if(!form||!win) return;
-
+  if (form.getAttribute('action')) return; // backend chat: don't block submit
   form.addEventListener('submit', e=>{
     e.preventDefault();
     const text=(input.value||'').trim();

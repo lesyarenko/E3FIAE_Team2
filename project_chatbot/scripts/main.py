@@ -42,6 +42,19 @@ def load_logged_in_user():
             g.user = User.query.get(user_id)
         except Exception:
             g.user = None
+def _chat_key(chatbot_id: str) -> str:
+    return f"chat_history_{chatbot_id}"
+
+def get_chat_history(chatbot_id: str):
+    return session.get(_chat_key(chatbot_id), [])
+
+def append_chat(chatbot_id: str, role: str, text: str):
+    key = _chat_key(chatbot_id)
+    history = session.get(key, [])
+    history.append({"role": role, "text": text})
+    session[key] = history
+    session.modified = True
+
 
 
 @app.route('/')
@@ -76,12 +89,47 @@ def cb(chatbot_id):
         flash('Keine Berechtigung für diesen Chatbot.', 'error')
         return redirect(url_for('catalog'))
 
+    history = get_chat_history(chatbot_id)
+
     return render_template(
         'chat.html',
         title=chatbot.name or 'Chat',
         username=user.username,
-        chatbot=chatbot
+        chatbot=chatbot,
+        history=history
     )
+    
+    @app.route('/cb/<string:chatbot_id>/send', methods=['POST'])
+    def cb_send(chatbot_id):
+        user = g.get('user')
+        if not user:
+            return redirect(url_for('login'))
+
+        chatbot = ChatBot.query.get(chatbot_id)
+        if not chatbot:
+            flash('Chatbot nicht gefunden.', 'error')
+            return redirect(url_for('catalog'))
+
+        # Permission check
+        if user.username != 'admin' and chatbot.user_id != user.id:
+            flash('Keine Berechtigung für diesen Chatbot.', 'error')
+            return redirect(url_for('catalog'))
+
+        # Read message from form
+        msg = (request.form.get('message') or '').strip()
+        if not msg:
+            return redirect(url_for('cb', chatbot_id=chatbot_id))
+
+        # 1) Save user message in session
+        append_chat(chatbot_id, "user", msg)
+
+        # 2) Simple bot answer (demo for Aufgabe 1)
+        bot_answer = f"Antwort: Ich habe verstanden: {msg}"
+        append_chat(chatbot_id, "bot", bot_answer)
+
+        # Go back to chat page (history is now longer)
+        return redirect(url_for('cb', chatbot_id=chatbot_id))
+
 
 
 @app.route('/catalog')
