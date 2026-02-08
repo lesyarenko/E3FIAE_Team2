@@ -24,10 +24,6 @@
   const resetUrl = form.dataset.resetUrl;
   //if (!sendUrl) return; // not chatbot page, so don't run ajax chat here
 
-
-  // Save initial HTML (welcome bubble) so reset can restore it
-  const initialHTML = win.innerHTML;
-
   // 1) Auto focus
   input.focus();
 
@@ -76,7 +72,7 @@
     }
   });
 
-  // 4) Reset button clears session + UI
+  // 4) Reset button clears session + reloads page
   if (resetBtn) {
     resetBtn.addEventListener('click', async () => {
       try {
@@ -84,11 +80,7 @@
       } catch (e) {
         // even if request fails, reset UI anyway
       }
-      win.innerHTML = initialHTML;
-      input.value = '';
-      input.disabled = false;
-      input.focus();
-      win.scrollTop = win.scrollHeight;
+      location.reload();
     });
   }
 
