@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import os
 from db import init_db, db, User, ChatBot, ChatBotTextFile, ChatBotCssFile
 from utils import hash_password, verify_password, get_git_info
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify
+from flask import jsonify
 
 app = Flask(
     __name__,
@@ -20,6 +22,19 @@ app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 
 # Initialize the database
 init_db(app, create_tables=True)
+
+def _chat_key(chatbot_id: str) -> str:
+    return f"chat_history_{chatbot_id}"
+
+def get_chat_history(chatbot_id: str):
+    return session.get(_chat_key(chatbot_id), [])
+
+def append_chat(chatbot_id: str, role: str, text: str):
+    key = _chat_key(chatbot_id)
+    history = session.get(key, [])
+    history.append({"role": role, "text": text})
+    session[key] = history
+    session.modified = True
 
 
 @app.context_processor
@@ -42,7 +57,6 @@ def load_logged_in_user():
             g.user = User.query.get(user_id)
         except Exception:
             g.user = None
-
 
 @app.route('/')
 def home():
@@ -76,12 +90,65 @@ def cb(chatbot_id):
         flash('Keine Berechtigung für diesen Chatbot.', 'error')
         return redirect(url_for('catalog'))
 
+    history = get_chat_history(chatbot_id)
+
     return render_template(
         'chat.html',
         title=chatbot.name or 'Chat',
         username=user.username,
-        chatbot=chatbot
+        chatbot=chatbot,
+        history=history
     )
+
+@app.route('/cb/<string:chatbot_id>/send_json', methods=['POST'])
+def cb_send_json(chatbot_id):
+    user = g.get('user')
+    if not user:
+        return jsonify({"ok": False, "error": "not_logged_in"}), 401
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+
+    if user.username != 'admin' and chatbot.user_id != user.id:
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    data = request.get_json(silent=True) or {}
+    msg = (data.get('message') or '').strip()
+    if not msg:
+        return jsonify({"ok": False, "error": "empty_message"}), 400
+
+    # save user message (session)
+    append_chat(chatbot_id, "user", msg)
+
+    # simple bot answer (demo)
+    bot_answer = f"Antwort: Ich habe verstanden: {msg}"
+    append_chat(chatbot_id, "bot", bot_answer)
+
+    return jsonify({
+        "ok": True,
+        "user": {"role": "user", "text": msg},
+        "bot": {"role": "bot", "text": bot_answer}
+    })
+
+@app.route('/cb/<string:chatbot_id>/reset', methods=['POST'])
+def cb_reset(chatbot_id):
+    user = g.get('user')
+    if not user:
+        return jsonify({"ok": False, "error": "not_logged_in"}), 401
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+
+    if user.username != 'admin' and chatbot.user_id != user.id:
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    # delete ONLY this chatbot session history
+    session.pop(_chat_key(chatbot_id), None)
+    session.modified = True
+
+    return jsonify({"ok": True})
 
 
 @app.route('/catalog')
@@ -133,6 +200,7 @@ def profile():
         bot_count=bot_count
     )
 
+
 @app.route('/chatbot/new', methods=['GET', 'POST'])
 def chatbot_new():
     # require authentication
@@ -183,7 +251,6 @@ def chatbot_new():
         flash(f'Fehler beim Erstellen des Chatbots: {str(e)}', 'error')
 
     return redirect(url_for('catalog'))
-
 
 @app.route('/chatbot/<string:chatbot_id>/edit', methods=['GET', 'POST'])
 def chatbot_edit(chatbot_id):
@@ -242,7 +309,6 @@ def chatbot_edit(chatbot_id):
 
     return redirect(url_for('catalog'))
 
-
 @app.route('/chatbot/<string:chatbot_id>/textfile/<string:textfile_id>/delete', methods=['POST'])
 def textfile_delete(chatbot_id, textfile_id):
     # require authentication
@@ -269,7 +335,6 @@ def textfile_delete(chatbot_id, textfile_id):
         flash(f'Fehler beim Löschen der Datei: {str(e)}', 'error')
 
     return redirect(url_for('chatbot_edit', chatbot_id=chatbot_id))
-
 
 @app.route('/chatbot/<string:chatbot_id>/delete', methods=['POST'])
 def chatbot_delete(chatbot_id):
@@ -339,7 +404,6 @@ def register():
     session.permanent = True
     return redirect(url_for('home'))
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -363,7 +427,6 @@ def login():
     session['user_id'] = user.id
     session.permanent = True
     return redirect(url_for('home'))
-
 
 @app.route('/logout')
 def logout():
