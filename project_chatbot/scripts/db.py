@@ -39,7 +39,7 @@ class User(db.Model):
     chatbots = db.relationship('ChatBot', back_populates='user', cascade='all, delete-orphan')
 
     def __repr__(self):
-        return f"<User id={self.id} username={self.username}>"
+        return f'<User id={self.id} username={self.username}>'
 
 
 class ChatBot(db.Model):
@@ -57,7 +57,7 @@ class ChatBot(db.Model):
     css_file = db.relationship('ChatBotCssFile', back_populates='chatbot', cascade='all, delete-orphan', uselist=False)
 
     def __repr__(self):
-        return f"<ChatBot id={self.id} name={self.name} username={self.username}>"
+        return f'<ChatBot id={self.id} name={self.name} username={self.username}>'
 
 
 class ChatBotTextFile(db.Model):
@@ -72,7 +72,7 @@ class ChatBotTextFile(db.Model):
     chatbot = db.relationship('ChatBot', back_populates='text_files')
 
     def __repr__(self):
-        return f"<ChatBotTextFile id={self.id} chatbot_id={self.chatbot_id} filename={self.filename}>"
+        return f'<ChatBotTextFile id={self.id} chatbot_id={self.chatbot_id} filename={self.filename}>'
 
 
 class ChatBotCssFile(db.Model):
@@ -87,6 +87,6 @@ class ChatBotCssFile(db.Model):
     chatbot = db.relationship('ChatBot', back_populates='css_file')
 
     def __repr__(self):
-        return f"<ChatBotCssFile id={self.id} chatbot_id={self.chatbot_id} filename={self.filename}>"
+        return f'<ChatBotCssFile id={self.id} chatbot_id={self.chatbot_id} filename={self.filename}>'
 
 

@@ -11,8 +11,8 @@ open_ai_api_secret = os.environ.get('OPEN_AI_API_SECRET', '')
 
 app = Flask(
     __name__,
-    template_folder="../app/templates",
-    static_folder="../app/static",
+    template_folder='../app/templates',
+    static_folder='../app/static',
 )
 
 # Secret key for session and flashing; prefer environment variable.
@@ -28,7 +28,7 @@ app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 init_db(app, create_tables=True)
 
 def _chat_key(chatbot_id: str) -> str:
-    return f"chat_history_{chatbot_id}"
+    return f'chat_history_{chatbot_id}'
 
 def get_chat_history(chatbot_id: str):
     return session.get(_chat_key(chatbot_id), [])
@@ -36,7 +36,7 @@ def get_chat_history(chatbot_id: str):
 def append_chat(chatbot_id: str, role: str, text: str):
     key = _chat_key(chatbot_id)
     history = session.get(key, [])
-    history.append({"role": role, "text": text})
+    history.append({'role': role, 'text': text})
     session[key] = history
     session.modified = True
 
@@ -57,7 +57,7 @@ def call_openai(chatbot, history):
             filename = getattr(tf, 'filename', None)
             content = getattr(tf, 'content', None)
             if content:
-                file_header = f"Reference file: {filename}\n" if filename else "Reference file:\n"
+                file_header = f'Reference file: {filename}\n' if filename else 'Reference file:\n'
                 messages.append({'role': 'system', 'content': file_header + content})
     except Exception:
         pass
@@ -89,7 +89,7 @@ def call_openai(chatbot, history):
             resp_json = json.loads(resp_text)
             return resp_json['choices'][0]['message']['content'].strip()
     except Exception as e:
-        print(f"Error calling OpenAI: {e}")
+        print(f'Error calling OpenAI: {e}')
         return None
 
 @app.context_processor
@@ -159,56 +159,56 @@ def cb(chatbot_id):
 def cb_send_json(chatbot_id):
     user = g.get('user')
     if not user:
-        return jsonify({"ok": False, "error": "not_logged_in"}), 401
+        return jsonify({'ok': False, 'error': 'not_logged_in'}), 401
 
     chatbot = ChatBot.query.get(chatbot_id)
     if not chatbot:
-        return jsonify({"ok": False, "error": "not_found"}), 404
+        return jsonify({'ok': False, 'error': 'not_found'}), 404
 
     if user.username != 'admin' and chatbot.user_id != user.id:
-        return jsonify({"ok": False, "error": "forbidden"}), 403
+        return jsonify({'ok': False, 'error': 'forbidden'}), 403
 
     data = request.get_json(silent=True) or {}
     msg = (data.get('message') or '').strip()
     if not msg:
-        return jsonify({"ok": False, "error": "empty_message"}), 400
+        return jsonify({'ok': False, 'error': 'empty_message'}), 400
 
     # save user message (session)
-    append_chat(chatbot_id, "user", msg)
+    append_chat(chatbot_id, 'user', msg)
 
     history = get_chat_history(chatbot_id)
 
     # ask OpenAI; if it fails, keep simple fallback
     bot_answer = call_openai(chatbot, history)
     if not bot_answer:
-        bot_answer = f"Antwort: Ich habe verstanden: {msg}"
+        bot_answer = f'Antwort: Ich habe verstanden: {msg}'
 
-    append_chat(chatbot_id, "assistant", bot_answer)
+    append_chat(chatbot_id, 'assistant', bot_answer)
 
     return jsonify({
-        "ok": True,
-        "user": {"role": "user", "text": msg},
-        "bot": {"role": "assistant", "text": bot_answer}
+        'ok': True,
+        'user': {'role': 'user', 'text': msg},
+        'bot': {'role': 'assistant', 'text': bot_answer}
     })
 
 @app.route('/cb/<string:chatbot_id>/reset', methods=['POST'])
 def cb_reset(chatbot_id):
     user = g.get('user')
     if not user:
-        return jsonify({"ok": False, "error": "not_logged_in"}), 401
+        return jsonify({'ok': False, 'error': 'not_logged_in'}), 401
 
     chatbot = ChatBot.query.get(chatbot_id)
     if not chatbot:
-        return jsonify({"ok": False, "error": "not_found"}), 404
+        return jsonify({'ok': False, 'error': 'not_found'}), 404
 
     if user.username != 'admin' and chatbot.user_id != user.id:
-        return jsonify({"ok": False, "error": "forbidden"}), 403
+        return jsonify({'ok': False, 'error': 'forbidden'}), 403
 
     # delete ONLY this chatbot session history
     session.pop(_chat_key(chatbot_id), None)
     session.modified = True
 
-    return jsonify({"ok": True})
+    return jsonify({'ok': True})
 
 
 @app.route('/catalog')
