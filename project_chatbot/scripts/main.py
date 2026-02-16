@@ -1,9 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g
+import json
 import os
-from db import init_db, db, User, ChatBot, ChatBotTextFile, ChatBotCssFile
-from utils import hash_password, verify_password, get_git_info
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify
-from flask import jsonify
+import urllib.request
+
+from flask import Flask, flash, g, jsonify, redirect, render_template, request, session, url_for
+
+from db import ChatBot, ChatBotCssFile, ChatBotTextFile, User, db, init_db
+from utils import get_git_info, hash_password, verify_password
+
+open_ai_api_secret = os.environ.get('OPEN_AI_API_SECRET', '')
 
 app = Flask(
     __name__,
@@ -12,7 +16,7 @@ app = Flask(
 )
 
 # Secret key for session and flashing; prefer environment variable.
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-secret'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
 
 # Database configuration (can be overridden by environment variable)
 app.config.setdefault(
@@ -36,6 +40,57 @@ def append_chat(chatbot_id: str, role: str, text: str):
     session[key] = history
     session.modified = True
 
+# Try calling OpenAI Chat Completions to generate the bot answer.
+def call_openai(chatbot, history):
+    if not open_ai_api_secret:
+        return None
+
+    messages = []
+    if getattr(chatbot, 'systemprompt', None):
+        messages.append({
+            'role': 'system',
+            'content': chatbot.systemprompt
+        })
+
+    try:
+        for tf in getattr(chatbot, 'text_files', []) or []:
+            filename = getattr(tf, 'filename', None)
+            content = getattr(tf, 'content', None)
+            if content:
+                file_header = f"Reference file: {filename}\n" if filename else "Reference file:\n"
+                messages.append({'role': 'system', 'content': file_header + content})
+    except Exception:
+        pass
+
+    for item in history:
+        role = item.get('role')
+        content = item.get('text')
+        if role and content is not None:
+            messages.append({'role': role, 'content': content})
+
+    payload = {
+        'model': 'gpt-3.5-turbo',
+        'messages': messages,
+        'temperature': 0.7,
+        'max_tokens': 300,
+    }
+
+    try:
+        req = urllib.request.Request(
+            'https://api.openai.com/v1/chat/completions',
+            data=json.dumps(payload).encode('utf-8'),
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {open_ai_api_secret}'
+            }
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            resp_text = resp.read().decode('utf-8')
+            resp_json = json.loads(resp_text)
+            return resp_json['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        print(f"Error calling OpenAI: {e}")
+        return None
 
 @app.context_processor
 def inject_git_info():
@@ -121,14 +176,19 @@ def cb_send_json(chatbot_id):
     # save user message (session)
     append_chat(chatbot_id, "user", msg)
 
-    # simple bot answer (demo)
-    bot_answer = f"Antwort: Ich habe verstanden: {msg}"
-    append_chat(chatbot_id, "bot", bot_answer)
+    history = get_chat_history(chatbot_id)
+
+    # ask OpenAI; if it fails, keep simple fallback
+    bot_answer = call_openai(chatbot, history)
+    if not bot_answer:
+        bot_answer = f"Antwort: Ich habe verstanden: {msg}"
+
+    append_chat(chatbot_id, "assistant", bot_answer)
 
     return jsonify({
         "ok": True,
         "user": {"role": "user", "text": msg},
-        "bot": {"role": "bot", "text": bot_answer}
+        "bot": {"role": "assistant", "text": bot_answer}
     })
 
 @app.route('/cb/<string:chatbot_id>/reset', methods=['POST'])
@@ -330,6 +390,32 @@ def textfile_delete(chatbot_id, textfile_id):
         db.session.delete(text_file)
         db.session.commit()
         flash('Text Datei gelöscht.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Löschen der Datei: {str(e)}', 'error')
+
+    return redirect(url_for('chatbot_edit', chatbot_id=chatbot_id))
+
+@app.route('/chatbot/<string:chatbot_id>/cssfile/delete', methods=['POST'])
+def cssfile_delete(chatbot_id):
+    # require authentication
+    user = g.get('user')
+    if not user:
+        return redirect(url_for('login'))
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot or chatbot.user_id != user.id:
+        flash('Chatbot nicht gefunden oder keine Berechtigung.', 'error')
+        return redirect(url_for('catalog'))
+
+    if not chatbot.css_file:
+        flash('CSS-Datei nicht gefunden.', 'error')
+        return redirect(url_for('chatbot_edit', chatbot_id=chatbot_id))
+
+    try:
+        db.session.delete(chatbot.css_file)
+        db.session.commit()
+        flash('CSS-Datei gelöscht.', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Fehler beim Löschen der Datei: {str(e)}', 'error')

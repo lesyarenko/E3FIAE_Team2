@@ -1,34 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<section class="card chat">
-  <header class="chat-topbar">
-    <div class="chat-ident">
-      <img class="avatar" src="{{ url_for('static', filename='logo.svg') }}" alt="Bot">
-      <div>
-        <h1 class="chat-title">{{ title }}</h1>
-        <p class="muted small">Schnell. Klar. Hilfsbereit.</p>
-      </div>
-    </div>
+<section class="card index">
+  <header class="card-header">
+    <h1>{{ title }}</h1>
+    <p class="muted small">Willkommen zum Chatbot-Manager! Hier kannst du deine Chatbots erstellen, bearbeiten und verwalten.</p>
   </header>
 
-  <div id="chat-window" class="chat-window">
-    <div class="bubble bot with-avatar">
-      <img class="bubble-avatar" src="{{ url_for('static', filename='logo.svg') }}" alt="Bot">
-      <div class="bubble-body">
-        <div class="bubble-text">Hallo! Ich bin dein Chatbot. Wie kann ich helfen?</div>
-        <div class="meta">jetzt</div>
-      </div>
-    </div>
+  <div class="index-content">
+    <p>Um loszulegen, klicke auf den Button unten, um deinen ersten Chatbot zu erstellen:</p>
+    <a href="{{ url_for('chatbot_new') }}" class="btn primary">Neuen Chatbot erstellen</a>
   </div>
-
-  <div id="typing" class="typing hidden">
-    <span></span><span></span><span></span>
-  </div>
-
-  <form id="chat-form" class="chat-form" autocomplete="off">
-    <input id="user-input" type="text" placeholder="Nachricht eingeben …">
-    <button class="btn primary" type="submit">Senden</button>
-  </form>
-</section>
 {% endblock %}

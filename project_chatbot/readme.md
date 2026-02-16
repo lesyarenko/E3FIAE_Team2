@@ -79,9 +79,51 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-### 4. Projekt starten
+### 4. Umgebungsvariablen konfigurieren
+Für die OpenAI-Integration wird ein API-Schlüssel benötigt. Setze die Umgebungsvariable `OPEN_AI_API_SECRET`:
+
+#### Temporär (nur für aktuelle Sitzung)
+Windows
 ```bash
-python scripts/main.py   # Startet Flask auf http://localhost:5050
+set OPEN_AI_API_SECRET=your_api_key_here
 ```
-### 5. Webseite öffnen
+Linux/macOS
+```bash
+export OPEN_AI_API_SECRET=your_api_key_here
+```
+
+#### Persistent (über Neustarts hinweg)
+**Windows:**
+```bash
+setx OPEN_AI_API_SECRET "your_api_key_here"
+```
+Nach dem Ausführen von `setx` musst du eine neue PowerShell/CMD-Sitzung öffnen, damit die Variable verfügbar ist.
+
+**Linux:**
+Füge folgende Zeile in `~/.bashrc` oder `~/.bash_profile` ein:
+```bash
+export OPEN_AI_API_SECRET="your_api_key_here"
+```
+Danach ausführen:
+```bash
+source ~/.bashrc
+```
+
+**macOS:**
+Füge folgende Zeile in `~/.zshrc` (oder `~/.bash_profile` für ältere Versionen) ein:
+```bash
+export OPEN_AI_API_SECRET="your_api_key_here"
+```
+Danach ausführen:
+```bash
+source ~/.zshrc
+```
+
+Ersetze `your_api_key_here` mit deinem tatsächlichen OpenAI API-Schlüssel von [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys).
+
+### 5. Projekt starten
+```bash
+python scripts/main.py # Startet Flask auf http://localhost:5050
+```
+### 6. Webseite öffnen
 Browser öffnen → [http://localhost:5050](http://localhost:5050)
