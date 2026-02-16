@@ -46,5 +46,19 @@
       </ul>
     </div>
     {% endif %}
+
+    {% if chatbot and chatbot.css_file %}
+    <div class="css-file-section">
+      <h3>Hochgeladene CSS-Datei</h3>
+      <ul class="file-list">
+        <li class="file-item">
+          <span class="file-name">{{ chatbot.css_file.filename }}</span>
+          <form method="post" action="{{ url_for('cssfile_delete', chatbot_id=chatbot.id) }}" class="delete-form" style="display: inline;">
+            <button type="submit" class="btn small danger" onclick="return confirm('Möchtest du diese Datei wirklich löschen?')">Löschen</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+    {% endif %}
   </section>
 {% endblock %}

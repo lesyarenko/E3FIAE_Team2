@@ -396,6 +396,32 @@ def textfile_delete(chatbot_id, textfile_id):
 
     return redirect(url_for('chatbot_edit', chatbot_id=chatbot_id))
 
+@app.route('/chatbot/<string:chatbot_id>/cssfile/delete', methods=['POST'])
+def cssfile_delete(chatbot_id):
+    # require authentication
+    user = g.get('user')
+    if not user:
+        return redirect(url_for('login'))
+
+    chatbot = ChatBot.query.get(chatbot_id)
+    if not chatbot or chatbot.user_id != user.id:
+        flash('Chatbot nicht gefunden oder keine Berechtigung.', 'error')
+        return redirect(url_for('catalog'))
+
+    if not chatbot.css_file:
+        flash('CSS-Datei nicht gefunden.', 'error')
+        return redirect(url_for('chatbot_edit', chatbot_id=chatbot_id))
+
+    try:
+        db.session.delete(chatbot.css_file)
+        db.session.commit()
+        flash('CSS-Datei gelöscht.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Löschen der Datei: {str(e)}', 'error')
+
+    return redirect(url_for('chatbot_edit', chatbot_id=chatbot_id))
+
 @app.route('/chatbot/<string:chatbot_id>/delete', methods=['POST'])
 def chatbot_delete(chatbot_id):
     # require authentication
