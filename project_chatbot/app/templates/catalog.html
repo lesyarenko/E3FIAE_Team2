@@ -1,21 +1,21 @@
-{% extends 'base.html' %}
-
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 <section class="card profile">
   <header class="card-header">
     <h1>{{ title }}</h1>
-    <p class="muted small">Verwalte deine Chatbots — <a class="btn" style="color: white;" href="{{ url_for('chatbot_new') }}">Neu</a></p>
+    <p class="muted small">
+      Verwalte deine Chatbots —
+      <a class="btn secondary" href="{{ url_for('chatbot_new') }}">Neu</a>
+    </p>
   </header>
 
   {% if chatbots %}
   <div class="table-wrap">
     <table class="table">
-      
       <thead>
         <tr>
           <th>ID</th>
           {% if is_admin %}
-            <th>Ersteller</th>
+          <th>Ersteller</th>
           {% endif %}
           <th>Name</th>
           <th>System Prompt</th>
@@ -24,27 +24,38 @@
           <th>Aktionen</th>
         </tr>
       </thead>
-      
+
       <tbody>
         {% for c in chatbots %}
         <tr>
           <td>{{ c.id }}</td>
           {% if is_admin %}
-            <td>{{ c.user.username if c.user else '-' }}</td>
+          <td>{{ c.user.username if c.user else '-' }}</td>
           {% endif %}
           <td>{{ c.name or '-' }}</td>
           <td class="mono small">
-            {{ (c.systemprompt[:120] ~ '...') if c.systemprompt and c.systemprompt|length > 120 else (c.systemprompt or '-') }}
+            {{ (c.systemprompt[:120] ~ '...') if c.systemprompt and
+            c.systemprompt|length > 120 else (c.systemprompt or '-') }}
           </td>
           <td>{{ c.welcomemessage or '-' }}</td>
-          <td>{{ c.created.strftime('%Y-%m-%d %H:%M') if c.created else '-' }}</td>
+          <td>
+            {{ c.created.strftime('%Y-%m-%d %H:%M') if c.created else '-' }}
+          </td>
           <td>
             <div class="actions">
-              <a href="{{ url_for('cb', chatbot_id=c.id) }}" class="action-link">Öffnen</a>
-              <a href="{{ url_for('chatbot_edit', chatbot_id=c.id) }}" class="action-link">Bearbeiten</a>
-              <form method="post"
-                    action="{{ url_for('chatbot_delete', chatbot_id=c.id) }}"
-                    onsubmit="return confirm('Chatbot wirklich löschen?');">
+              <a href="{{ url_for('cb', chatbot_id=c.id) }}" class="action-link"
+                >Öffnen</a
+              >
+              <a
+                href="{{ url_for('chatbot_edit', chatbot_id=c.id) }}"
+                class="action-link"
+                >Bearbeiten</a
+              >
+              <form
+                method="post"
+                action="{{ url_for('chatbot_delete', chatbot_id=c.id) }}"
+                onsubmit="return confirm('Chatbot wirklich löschen?');"
+              >
                 <button class="btn small danger" type="submit">Löschen</button>
               </form>
             </div>
@@ -52,11 +63,10 @@
         </tr>
         {% endfor %}
       </tbody>
-
     </table>
   </div>
   {% else %}
-    <p class="muted">Du hast noch keine Chatbots angelegt.</p>
+  <p class="muted">Du hast noch keine Chatbots angelegt.</p>
   {% endif %}
 </section>
 {% endblock %}
