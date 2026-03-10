@@ -22,33 +22,33 @@
     </a>
     <nav class="nav">
 
-  <!-- eigentliche Links -->
-  <div class="nav-links">
+      <!-- eigentliche Links -->
+      <div class="nav-links">
 
-    <!-- Home ist immer da -->
-    <a href="{{ url_for('home') }}">Home</a>
+        <!-- Home ist immer da -->
+        <a href="{{ url_for('home') }}">Home</a>
 
-    {% if username %}
-      <!-- Katalog = Liste aller Chatbots für diesen User -->
-      <!--<a href="{{ url_for('profile') }}">Katalog</a> -->
-      <a href="{{ url_for('catalog') }}">Katalog</a>
+        {% if username %}
+        <!-- Katalog = Liste aller Chatbots für diesen User -->
+        <!--<a href="{{ url_for('profile') }}">Katalog</a> -->
+        <a href="{{ url_for('catalog') }}">Katalog</a>
 
 
-      <!-- neuen Chatbot anlegen -->
-      <a href="{{ url_for('chatbot_new') }}">Neu</a>
+        <!-- neuen Chatbot anlegen -->
+        <a href="{{ url_for('chatbot_new') }}">Neu</a>
 
-      <a href="{{ url_for('profile') }}">Profil</a>
+        <a href="{{ url_for('profile') }}">Profil</a>
 
-      <a href="{{ url_for('logout') }}">Logout</a>
-    {% else %}
-      <a href="{{ url_for('login') }}">Login</a>
-      <a href="{{ url_for('register') }}">Registrieren</a>
-    {% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Registrieren</a>
+        {% endif %}
 
-    <!-- Theme-Button bleibt auch im Menü -->
-    <button id="themeToggle" aria-label="Theme umschalten">🌓</button>
-  </div>
-</nav>
+        <!-- Theme-Button bleibt auch im Menü -->
+        <button id="themeToggle" aria-label="Theme umschalten">🌓</button>
+      </div>
+    </nav>
   </header>
 
   <main class="shell">
