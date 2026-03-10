@@ -86,16 +86,7 @@
 
   function addBubble(role, text) {
     const wrap = document.createElement('div');
-    wrap.className = role === 'user' ? 'bubble user' : 'bubble bot with-avatar';
-
-    if (role === 'bot') {
-      const av = document.createElement('img');
-      av.className = 'bubble-avatar';
-      const headerLogo = document.querySelector('.logo');
-      av.src = headerLogo ? headerLogo.src : '';
-      av.alt = 'Bot';
-      wrap.appendChild(av);
-    }
+    wrap.className = role === 'user' ? 'bubble user' : 'bubble bot';
 
     const body = document.createElement('div');
     body.className = 'bubble-body';
@@ -104,12 +95,7 @@
     msg.className = 'bubble-text';
     msg.textContent = text;
 
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    meta.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
     body.appendChild(msg);
-    body.appendChild(meta);
     wrap.appendChild(body);
     win.appendChild(wrap);
     win.scrollTop = win.scrollHeight;
