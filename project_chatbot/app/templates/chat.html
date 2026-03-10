@@ -19,16 +19,6 @@
   <main class="shell">
 
     <section class="card chat">
-      <header class="chat-topbar">
-        <div class="chat-ident">
-          <img class="avatar" src="{{ url_for('static', filename='logo.svg') }}" alt="Bot">
-          <div>
-            <h1 class="chat-title">{{ chatbot.name or 'Chat' }}</h1>
-            <p class="muted small">ID: {{ chatbot.id }}</p>
-          </div>
-        </div>
-      </header>
-
       <div id="chat-window" class="chat-window">
         <div class="bubble bot with-avatar">
           <img class="bubble-avatar" src="{{ url_for('static', filename='logo.svg') }}" alt="Bot">
